@@ -8,29 +8,43 @@ OptionalDict = Dict[str, Any] | None
 
 
 async def async_req(
-        url: str,
-        proxy_addr: OptionalStr = None,
-        headers: OptionalDict = None,
-        data: dict | bytes | None = None,
-        json_data: dict | list | None = None,
-        timeout: int = 20,
-        redirect_url: bool = False,
-        return_cookies: bool = False,
-        include_cookies: bool = False,
-        abroad: bool = False,
-        content_conding: str = 'utf-8',
-        verify: bool = False,
-        http2: bool = True
+    url: str,
+    proxy_addr: OptionalStr = None,
+    headers: OptionalDict = None,
+    data: dict | bytes | None = None,
+    json_data: dict | list | None = None,
+    timeout: int = 20,
+    redirect_url: bool = False,
+    return_cookies: bool = False,
+    include_cookies: bool = False,
+    abroad: bool = False,
+    content_conding: str = "utf-8",
+    verify: bool = False,
+    http2: bool = True,
 ) -> OptionalDict | OptionalStr | tuple:
     if headers is None:
         headers = {}
     try:
         proxy_addr = utils.handle_proxy_addr(proxy_addr)
         if data or json_data:
-            async with httpx.AsyncClient(proxy=proxy_addr, timeout=timeout, verify=verify, http2=http2) as client:
-                response = await client.post(url, data=data, json=json_data, headers=headers)
+            async with httpx.AsyncClient(
+                proxy=proxy_addr,
+                timeout=timeout,
+                verify=verify,
+                http2=http2,
+                trust_env=False,
+            ) as client:
+                response = await client.post(
+                    url, data=data, json=json_data, headers=headers
+                )
         else:
-            async with httpx.AsyncClient(proxy=proxy_addr, timeout=timeout, verify=verify, http2=http2) as client:
+            async with httpx.AsyncClient(
+                proxy=proxy_addr,
+                timeout=timeout,
+                verify=verify,
+                http2=http2,
+                trust_env=False,
+            ) as client:
                 response = await client.get(url, headers=headers, follow_redirects=True)
 
         if redirect_url:
@@ -46,12 +60,21 @@ async def async_req(
     return resp_str
 
 
-async def get_response_status(url: str, proxy_addr: OptionalStr = None, headers: OptionalDict = None,
-                              timeout: int = 10, abroad: bool = False, verify: bool = False, http2=False) -> bool:
+async def get_response_status(
+    url: str,
+    proxy_addr: OptionalStr = None,
+    headers: OptionalDict = None,
+    timeout: int = 10,
+    abroad: bool = False,
+    verify: bool = False,
+    http2=False,
+) -> bool:
 
     try:
         proxy_addr = utils.handle_proxy_addr(proxy_addr)
-        async with httpx.AsyncClient(proxy=proxy_addr, timeout=timeout, verify=verify) as client:
+        async with httpx.AsyncClient(
+            proxy=proxy_addr, timeout=timeout, verify=verify, trust_env=False
+        ) as client:
             response = await client.head(url, headers=headers, follow_redirects=True)
             return response.status_code == 200
     except Exception as e:
